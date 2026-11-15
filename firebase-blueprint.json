@@ -1,0 +1,240 @@
+{
+  "entities": {
+    "Source": {
+      "title": "Source",
+      "description": "RSS/Atom, Google News RSS, PIB/RBI/SEBI regulator, or YouTube channel feed configuration.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "type": { "type": "string", "enum": ["rss", "youtube", "regulator", "google_news"] },
+        "url": { "type": "string", "minLength": 8, "maxLength": 2000 },
+        "sector": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "language": { "type": "string", "enum": ["en", "hi"] },
+        "trust": { "type": "number" },
+        "priority": { "type": "string", "enum": ["high", "normal"] },
+        "enabled": { "type": "boolean" },
+        "etag": { "type": "string", "maxLength": 400 },
+        "lastModified": { "type": "string", "maxLength": 200 },
+        "lastFetchedAt": { "type": "string", "maxLength": 100 },
+        "lastError": { "type": "string", "maxLength": 500 },
+        "consecutiveErrors": { "type": "number" }
+      },
+      "required": ["name", "type", "url", "sector", "language", "trust", "enabled", "consecutiveErrors"]
+    },
+    "Story": {
+      "title": "Story",
+      "description": "Server-written clustered multi-source news story with up to 40 compact article entries, scores, verification, sensitivity, structured summary, creator packaging, and expiresAt.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "headline": { "type": "string", "maxLength": 600 },
+        "sector": { "type": "string", "maxLength": 80 },
+        "dayKey": { "type": "string", "maxLength": 20 },
+        "expiresAt": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "maxLength": 100 },
+        "updatedAt": { "type": "string", "maxLength": 100 },
+        "sourceCount": { "type": "number" },
+        "importanceScore": { "type": "number" },
+        "heatScore": { "type": "number" },
+        "satirePotential": { "type": "number" },
+        "verification": { "type": "string", "enum": ["verified", "developing", "single-source"] },
+        "sensitivity": { "type": "string", "enum": ["normal", "handle-with-care", "no-joke"] },
+        "summarised": { "type": "boolean" },
+        "whatHappened": { "type": "string", "maxLength": 3000 },
+        "whyItMatters": { "type": "string", "maxLength": 2000 }
+      },
+      "required": ["headline", "sector", "createdAt", "updatedAt", "sourceCount", "importanceScore", "satirePotential", "sensitivity", "summarised"]
+    },
+    "FeedIndexDay": {
+      "title": "FeedIndexDay",
+      "description": "Server-written compact card index for every story of a dayKey (YYYY-MM-DD in APP_TZ).",
+      "type": "object",
+      "properties": {
+        "dayKey": { "type": "string", "maxLength": 20 },
+        "part": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["dayKey", "updatedAt"]
+    },
+    "SeenShard": {
+      "title": "SeenShard",
+      "description": "Server-only shard document (0..f) mapping article canonical URL hash to dayKey for duplicate detection.",
+      "type": "object",
+      "properties": {
+        "shardId": { "type": "string", "maxLength": 4 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["shardId", "updatedAt"]
+    },
+    "StatsDay": {
+      "title": "StatsDay",
+      "description": "Server-written daily top 200 entities and keywords per sector for trend calculations.",
+      "type": "object",
+      "properties": {
+        "dayKey": { "type": "string", "maxLength": 20 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["dayKey", "updatedAt"]
+    },
+    "StarredStory": {
+      "title": "StarredStory",
+      "description": "Owner-starred story snapshot that never expires.",
+      "type": "object",
+      "properties": {
+        "storyId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "savedAt": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "note": { "type": "string", "maxLength": 2000 }
+      },
+      "required": ["storyId", "savedAt"]
+    },
+    "Script": {
+      "title": "Script",
+      "description": "Satire or neutral briefing script with up to 5 versions, source snapshot, and fact-check result.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "format": { "type": "string", "maxLength": 80 },
+        "language": { "type": "string", "enum": ["Hinglish", "Hindi", "English"] },
+        "tone": { "type": "string", "enum": ["Mild", "Medium", "Savage"] },
+        "runtimeTarget": { "type": "string", "maxLength": 40 },
+        "runtimeTargetSec": { "type": "number" },
+        "status": { "type": "string", "enum": ["Draft", "Final", "Recorded", "Published"] },
+        "draftByAgent": { "type": "boolean" },
+        "isNeutralBriefing": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 100 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["title", "storyIds", "format", "language", "tone", "runtimeTargetSec", "sections", "createdAt", "updatedAt"]
+    },
+    "Desk": {
+      "title": "Desk",
+      "description": "Episode desk ordered story queue (maximum 30), working title, and run-sheet notes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "notes": { "type": "string", "maxLength": 5000 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["title", "storyIds", "notes", "updatedAt"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "Owner preferences for theme, density, language, tone, never-joke list, sector boosts, thumbnails, AI daily limit, and retention days.",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "enum": ["dark", "light"] },
+        "density": { "type": "string", "enum": ["comfortable", "compact"] },
+        "showThumbnails": { "type": "boolean" },
+        "defaultLanguage": { "type": "string", "enum": ["Hinglish", "Hindi", "English"] },
+        "defaultTone": { "type": "string", "enum": ["Mild", "Medium", "Savage"] },
+        "defaultRuntime": { "type": "string", "enum": ["60s Short", "3 min", "8 min", "12 min"] },
+        "defaultFormat": { "type": "string", "enum": ["News-desk monologue", "Rapid-fire headlines", "Deep-dive explainer"] },
+        "wpm": { "type": "number" },
+        "aiDailyLimit": { "type": "number" },
+        "retentionDays": { "type": "number" },
+        "doNotJokeAbout": { "type": "string", "minLength": 10, "maxLength": 3000 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["theme", "defaultLanguage", "defaultTone", "doNotJokeAbout", "sectorBoosts"]
+    },
+    "MetaDoc": {
+      "title": "MetaDoc",
+      "description": "Server-written metadata documents: meta/sourceState, meta/sync, meta/aiUsage.",
+      "type": "object",
+      "properties": {
+        "updatedAt": { "type": "string", "maxLength": 100 },
+        "lastSyncedAt": { "type": "string", "maxLength": 100 },
+        "lastStatus": { "type": "string", "maxLength": 40 }
+      }
+    },
+    "AgentRun": {
+      "title": "AgentRun",
+      "description": "Server-written per-tick agent execution log kept for 7 days.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "startedAt": { "type": "string", "maxLength": 100 },
+        "completedAt": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["ok", "partial", "error"] },
+        "aiCallsUsed": { "type": "number" }
+      },
+      "required": ["startedAt", "completedAt", "status", "aiCallsUsed"]
+    },
+    "TickLock": {
+      "title": "TickLock",
+      "description": "Server-only lease document (locks/tick) preventing overlapping background ticks.",
+      "type": "object",
+      "properties": {
+        "lockedBy": { "type": "string", "maxLength": 128 },
+        "acquiredAt": { "type": "string", "maxLength": 100 },
+        "expiresAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["lockedBy", "acquiredAt", "expiresAt"]
+    },
+    "DemoDoc": {
+      "title": "DemoDoc",
+      "description": "Optional isolated demo data collection.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 }
+      }
+    }
+  },
+  "firestore": {
+    "/sources/{sourceId}": {
+      "schema": { "$ref": "#/entities/Source" },
+      "description": "Configured RSS, Google News RSS, YouTube, and regulator feeds (Owner read/write)."
+    },
+    "/stories/{storyId}": {
+      "schema": { "$ref": "#/entities/Story" },
+      "description": "Clustered multi-source stories (Server-write-only, Owner read-only)."
+    },
+    "/feedIndex/{dayKey}": {
+      "schema": { "$ref": "#/entities/FeedIndexDay" },
+      "description": "Daily compact story card index (Server-write-only, Owner read-only)."
+    },
+    "/seen/{shardId}": {
+      "schema": { "$ref": "#/entities/SeenShard" },
+      "description": "16 deduplication hash shards (Server-only, never client-readable)."
+    },
+    "/stats/{dayKey}": {
+      "schema": { "$ref": "#/entities/StatsDay" },
+      "description": "Daily top entities and keywords per sector (Server-write-only, Owner read-only)."
+    },
+    "/starred/{storyId}": {
+      "schema": { "$ref": "#/entities/StarredStory" },
+      "description": "Permanent starred story snapshots (Owner read/write)."
+    },
+    "/scripts/{scriptId}": {
+      "schema": { "$ref": "#/entities/Script" },
+      "description": "Satire scripts and version history (Owner read/write and server agent drafts)."
+    },
+    "/desk/{uid}": {
+      "schema": { "$ref": "#/entities/Desk" },
+      "description": "Current episode desk and run-sheet (Owner read/write)."
+    },
+    "/settings/{uid}": {
+      "schema": { "$ref": "#/entities/UserSettings" },
+      "description": "Owner preferences and guardrails (Owner read/write)."
+    },
+    "/meta/{docId}": {
+      "schema": { "$ref": "#/entities/MetaDoc" },
+      "description": "Server telemetry: meta/sourceState, meta/sync, meta/aiUsage (Server-write-only, Owner read-only)."
+    },
+    "/agentRuns/{runId}": {
+      "schema": { "$ref": "#/entities/AgentRun" },
+      "description": "Per-tick agent execution logs (Server-write-only, Owner read-only)."
+    },
+    "/locks/{lockId}": {
+      "schema": { "$ref": "#/entities/TickLock" },
+      "description": "Tick execution lease locks/tick (Server-only, never client-readable)."
+    },
+    "/demo/{docId}": {
+      "schema": { "$ref": "#/entities/DemoDoc" },
+      "description": "Optional isolated demo data (Server-write-only, Owner read-only)."
+    }
+  }
+}

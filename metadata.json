@@ -1,0 +1,6 @@
+{
+  "name": "The Main Guy TV - Satire Intelligence & Shorts Script Studio",
+  "description": "Verified real-time intelligence research engine and YouTube Shorts satire script generator for The Main Guy TV across 10 beats with grounded citations, Hinglish voice, and visual asset prompts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

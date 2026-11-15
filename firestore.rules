@@ -1,0 +1,224 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Global Default-Deny Safety Net (Pillar 1 & Section 4)
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Primitives & Zero-Trust Single-Owner Gate
+    // ===============================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == "mamtadevi9329@gmail.com"
+        && request.auth.uid is string
+        && request.auth.uid.size() >= 1
+        && request.auth.uid.size() <= 128;
+    }
+
+    // ===============================================================
+    // Validation Blueprints (Pillar 2 & Pillar 5)
+    // ===============================================================
+    function isValidSource(data) {
+      return data.keys().hasAll(['name', 'type', 'url', 'sector', 'language', 'trust', 'enabled', 'consecutiveErrors'])
+        && data.keys().hasOnly(['id', 'name', 'type', 'url', 'sector', 'language', 'trust', 'priority', 'enabled', 'etag', 'lastModified', 'lastFetchedAt', 'lastError', 'consecutiveErrors'])
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 200
+        && data.type in ['rss', 'youtube', 'regulator', 'google_news']
+        && data.url is string && data.url.size() >= 8 && data.url.size() <= 2000
+        && data.sector is string && data.sector.size() >= 1 && data.sector.size() <= 80
+        && data.language in ['en', 'hi']
+        && data.trust is number && data.trust >= 1 && data.trust <= 5
+        && data.enabled is bool
+        && data.consecutiveErrors is number && data.consecutiveErrors >= 0 && data.consecutiveErrors <= 10000
+        && (!('id' in data) || (data.id is string && data.id.size() <= 128))
+        && (!('priority' in data) || data.priority in ['high', 'normal'])
+        && (!('etag' in data) || (data.etag is string && data.etag.size() <= 400))
+        && (!('lastModified' in data) || (data.lastModified is string && data.lastModified.size() <= 200))
+        && (!('lastFetchedAt' in data) || (data.lastFetchedAt is string && data.lastFetchedAt.size() <= 100))
+        && (!('lastError' in data) || (data.lastError is string && data.lastError.size() <= 500));
+    }
+
+    function isValidStarred(data) {
+      return data.keys().hasAll(['storyId', 'savedAt'])
+        && data.keys().hasOnly(['storyId', 'savedAt', 'note', 'snapshot'])
+        && isValidId(data.storyId)
+        && data.savedAt is string && data.savedAt.size() >= 1 && data.savedAt.size() <= 100
+        && (!('note' in data) || (data.note is string && data.note.size() <= 2000))
+        && (!('snapshot' in data) || data.snapshot is map);
+    }
+
+    function isValidScript(data) {
+      return data.keys().hasAll(['title', 'storyIds', 'format', 'language', 'tone', 'runtimeTargetSec', 'sections', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'title', 'storyIds', 'format', 'language', 'tone', 'runtimeTarget', 'runtimeTargetSec', 'status', 'draftByAgent', 'isNeutralBriefing', 'tags', 'sections', 'factBox', 'versions', 'createdAt', 'updatedAt'])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 400
+        && data.storyIds is list && data.storyIds.size() <= 30 && (data.storyIds.size() == 0 || (data.storyIds[0] is string && data.storyIds[0].size() <= 128))
+        && data.format in ['News-desk monologue', 'Rapid-fire headlines', 'Deep-dive explainer']
+        && data.language in ['Hinglish', 'Hindi', 'English']
+        && data.tone in ['Mild', 'Medium', 'Savage']
+        && data.runtimeTargetSec is number && data.runtimeTargetSec >= 30 && data.runtimeTargetSec <= 3600
+        && data.sections is list && data.sections.size() <= 50
+        && data.createdAt is string && data.createdAt.size() <= 100
+        && data.updatedAt is string && data.updatedAt.size() <= 100
+        && (!('id' in data) || (data.id is string && data.id.size() <= 128))
+        && (!('runtimeTarget' in data) || (data.runtimeTarget is string && data.runtimeTarget.size() <= 40))
+        && (!('status' in data) || data.status in ['Draft', 'Final', 'Recorded', 'Published'])
+        && (!('draftByAgent' in data) || data.draftByAgent is bool)
+        && (!('isNeutralBriefing' in data) || data.isNeutralBriefing is bool)
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 10 && (data.tags.size() == 0 || (data.tags[0] is string && data.tags[0].size() <= 60))))
+        && (!('factBox' in data) || (data.factBox is list && data.factBox.size() <= 60))
+        && (!('versions' in data) || (data.versions is list && data.versions.size() <= 5));
+    }
+
+    function isValidDesk(data) {
+      return data.keys().hasAll(['title', 'storyIds', 'notes', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'title', 'storyIds', 'storySnapshots', 'notes', 'storyNotes', 'storyMinutes', 'updatedAt'])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 300
+        && data.storyIds is list && data.storyIds.size() <= 30 && (data.storyIds.size() == 0 || (data.storyIds[0] is string && data.storyIds[0].size() <= 128))
+        && data.notes is string && data.notes.size() <= 5000
+        && data.updatedAt is string && data.updatedAt.size() <= 100
+        && (!('id' in data) || (data.id is string && data.id.size() <= 128))
+        && (!('storySnapshots' in data) || data.storySnapshots is map)
+        && (!('storyNotes' in data) || data.storyNotes is map)
+        && (!('storyMinutes' in data) || data.storyMinutes is map);
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['theme', 'defaultLanguage', 'defaultTone', 'doNotJokeAbout', 'sectorBoosts'])
+        && data.keys().hasOnly(['theme', 'density', 'showThumbnails', 'defaultLanguage', 'defaultTone', 'defaultRuntime', 'defaultFormat', 'wpm', 'aiDailyLimit', 'retentionDays', 'keepScripts', 'doNotJokeAbout', 'sectorBoosts', 'updatedAt'])
+        && data.theme in ['dark', 'light']
+        && data.defaultLanguage in ['Hinglish', 'Hindi', 'English']
+        && data.defaultTone in ['Mild', 'Medium', 'Savage']
+        && data.doNotJokeAbout is string && data.doNotJokeAbout.size() >= 10 && data.doNotJokeAbout.size() <= 3000
+        && data.sectorBoosts is map
+        && (!('density' in data) || data.density in ['comfortable', 'compact'])
+        && (!('showThumbnails' in data) || data.showThumbnails is bool)
+        && (!('defaultRuntime' in data) || data.defaultRuntime in ['60s Short', '3 min', '8 min', '12 min'])
+        && (!('defaultFormat' in data) || data.defaultFormat in ['News-desk monologue', 'Rapid-fire headlines', 'Deep-dive explainer'])
+        && (!('wpm' in data) || (data.wpm is number && data.wpm >= 60 && data.wpm <= 300))
+        && (!('aiDailyLimit' in data) || (data.aiDailyLimit is number && data.aiDailyLimit >= 1 && data.aiDailyLimit <= 5000))
+        && (!('retentionDays' in data) || (data.retentionDays is number && data.retentionDays >= 7 && data.retentionDays <= 60))
+        && (!('keepScripts' in data) || data.keepScripts is bool)
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 100));
+    }
+
+    // ===============================================================
+    // 1. Client-Writable Collections (Owner only: sources, starred, scripts, desk, settings)
+    // ===============================================================
+    match /sources/{sourceId} {
+      allow get: if isOwner() && isValidId(sourceId);
+      allow list: if isOwner() && existing().name is string;
+      allow create: if isOwner() && isValidId(sourceId) && isValidSource(incoming());
+      allow update: if isOwner() && isValidId(sourceId) && isValidSource(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['id', 'name', 'type', 'url', 'sector', 'language', 'trust', 'priority', 'enabled', 'etag', 'lastModified', 'lastFetchedAt', 'lastError', 'consecutiveErrors']);
+      allow delete: if isOwner() && isValidId(sourceId);
+    }
+
+    match /starred/{storyId} {
+      allow get: if isOwner() && isValidId(storyId);
+      allow list: if isOwner() && existing().storyId is string;
+      allow create: if isOwner() && isValidId(storyId) && isValidStarred(incoming()) && incoming().storyId == storyId;
+      allow update: if isOwner() && isValidId(storyId) && isValidStarred(incoming())
+        && incoming().storyId == existing().storyId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['savedAt', 'note', 'snapshot']);
+      allow delete: if isOwner() && isValidId(storyId);
+    }
+
+    match /scripts/{scriptId} {
+      allow get: if isOwner() && isValidId(scriptId);
+      allow list: if isOwner() && existing().title is string;
+      allow create: if isOwner() && isValidId(scriptId) && isValidScript(incoming());
+      allow update: if isOwner() && isValidId(scriptId) && isValidScript(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['id', 'title', 'storyIds', 'format', 'language', 'tone', 'runtimeTarget', 'runtimeTargetSec', 'status', 'draftByAgent', 'isNeutralBriefing', 'tags', 'sections', 'factBox', 'versions', 'updatedAt']);
+      allow delete: if isOwner() && isValidId(scriptId);
+    }
+
+    match /desk/{uid} {
+      allow get: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'current');
+      allow list: if isOwner() && existing().title is string;
+      allow create: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'current') && isValidDesk(incoming());
+      allow update: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'current') && isValidDesk(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['id', 'title', 'storyIds', 'storySnapshots', 'notes', 'storyNotes', 'storyMinutes', 'updatedAt']);
+      allow delete: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'current');
+    }
+
+    match /settings/{uid} {
+      allow get: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'user');
+      allow list: if isOwner() && existing().theme is string;
+      allow create: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'user') && isValidSettings(incoming());
+      allow update: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'user') && isValidSettings(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['theme', 'density', 'showThumbnails', 'defaultLanguage', 'defaultTone', 'defaultRuntime', 'defaultFormat', 'wpm', 'aiDailyLimit', 'retentionDays', 'keepScripts', 'doNotJokeAbout', 'sectorBoosts', 'updatedAt']);
+      allow delete: if isOwner() && isValidId(uid) && (uid == request.auth.uid || uid == 'user');
+    }
+
+    // ===============================================================
+    // 2. Server-Write-Only Collections (Owner read-only; Client writes strictly denied)
+    // ===============================================================
+    match /stories/{storyId} {
+      allow get: if isOwner() && isValidId(storyId);
+      allow list: if isOwner() && existing().headline is string;
+      allow create, update, delete: if false;
+    }
+
+    match /feedIndex/{dayKey} {
+      allow get: if isOwner() && isValidId(dayKey);
+      allow list: if isOwner() && existing().dayKey is string;
+      allow create, update, delete: if false;
+    }
+
+    match /stats/{dayKey} {
+      allow get: if isOwner() && isValidId(dayKey);
+      allow list: if isOwner() && existing().dayKey is string;
+      allow create, update, delete: if false;
+    }
+
+    match /meta/{docId} {
+      allow get: if isOwner() && isValidId(docId);
+      allow list: if isOwner() && existing() != null;
+      allow create, update, delete: if false;
+    }
+
+    match /agentRuns/{runId} {
+      allow get: if isOwner() && isValidId(runId);
+      allow list: if isOwner() && existing().startedAt is string;
+      allow create, update, delete: if false;
+    }
+
+    match /demo/{docId} {
+      allow get: if isOwner() && isValidId(docId);
+      allow list: if isOwner() && existing() != null;
+      allow create, update, delete: if false;
+    }
+
+    // ===============================================================
+    // 3. Server-Only Internal Collections (Not readable or writable by client)
+    // ===============================================================
+    match /seen/{shardId} {
+      allow read, write: if false;
+    }
+
+    match /locks/{lockId} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* Section 11.2 Visual System — Dark Theme Tokens */
+    --bg-base: #0F1014;
+    --bg-surface: #16181D;
+    --bg-raised: #1C1F26;
+    --border-subtle: #2A2D36;
+    --text-primary: #ECEDEF;
+    --text-secondary: #A0A4AF;
+    --text-muted: #6F7380;
+    --accent-primary: #3D5AFE;
+    --accent-hover: #304FFE;
+    --status-success: #3F9E6B;
+    --status-warning: #C9922E;
+    --status-danger: #C75450;
+    --card-shadow: none;
+  }
+
+  html.light {
+    /* Section 11.2 Visual System — Light Theme Tokens (AA contrast) */
+    --bg-base: #F5F6F8;
+    --bg-surface: #FFFFFF;
+    --bg-raised: #EEF0F4;
+    --border-subtle: #E2E4EA;
+    --text-primary: #16181D;
+    --text-secondary: #4B505E;
+    --text-muted: #6F7380;
+    --accent-primary: #3D5AFE;
+    --accent-hover: #2A45E0;
+    --status-success: #2E7D52;
+    --status-warning: #A67316;
+    --status-danger: #B33E3A;
+    --card-shadow: 0 1px 2px rgba(22, 24, 29, 0.05);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  /* Serif for story headlines only (Section 11.2) */
+  .font-serif-headline {
+    font-family: 'Newsreader', Georgia, serif;
+    text-wrap: balance;
+  }
+
+  /* Mono only for timestamps, IDs, and source citations (Section 11.2) */
+  .font-mono-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.desk-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
